@@ -12,6 +12,8 @@
     { "source": "/authorize", "destination": "/api/authorize" },
     { "source": "/token", "destination": "/api/token" },
     { "source": "/register", "destination": "/api/register" },
+    { "source": "/og.webp", "destination": "/og.webp" },
+    { "source": "/favicon.svg", "destination": "/favicon.svg" },
     { "source": "/favicon.ico", "destination": "/favicon.svg" },
     { "source": "/", "destination": "/api/index" }
   ]
