@@ -1,0 +1,7 @@
+{
+  "name": "gh-mcp-wrapper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OAuth wrapper that lets claude.ai connect to the official GitHub MCP server via a single password gate."
+}
