@@ -11,6 +11,7 @@
     { "source": "/mcp", "destination": "/api/mcp" },
     { "source": "/authorize", "destination": "/api/authorize" },
     { "source": "/token", "destination": "/api/token" },
-    { "source": "/register", "destination": "/api/register" }
+    { "source": "/register", "destination": "/api/register" },
+    { "source": "/favicon.ico", "destination": "/favicon.svg" }
   ]
 }
