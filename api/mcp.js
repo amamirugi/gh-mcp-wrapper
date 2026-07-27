@@ -9,6 +9,7 @@ export default async function handler(request) {
 
   const secret = process.env.SIGNING_SECRET;
   const pat = process.env.GITHUB_PAT;
+  const toolsets = process.env.GITHUB_TOOLSETS;
   const base = getBaseUrl(request);
 
   const authHeader = request.headers.get('authorization') || '';
@@ -30,6 +31,10 @@ export default async function handler(request) {
   // bearer for the GitHub PAT.
   const fwdHeaders = new Headers();
   fwdHeaders.set('authorization', `Bearer ${pat}`);
+  // Optional toolset selection. When unset, GitHub applies its default
+  // toolsets (repos, issues, pull_requests). Set GITHUB_TOOLSETS to "all"
+  // or a comma-separated list (e.g. "default,actions") to widen the surface.
+  if (toolsets) fwdHeaders.set('x-mcp-toolsets', toolsets);
   for (const h of ['accept', 'content-type', 'mcp-protocol-version', 'mcp-session-id']) {
     const v = request.headers.get(h);
     if (v) fwdHeaders.set(h, v);
