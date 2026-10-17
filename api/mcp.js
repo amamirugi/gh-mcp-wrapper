@@ -35,6 +35,11 @@ export default async function handler(request) {
   // toolsets (repos, issues, pull_requests). Set GITHUB_TOOLSETS to "all"
   // or a comma-separated list (e.g. "default,actions") to widen the surface.
   if (toolsets) fwdHeaders.set('x-mcp-toolsets', toolsets);
+  // claude.ai collapses MCP App forms when the tool result is marked isError,
+  // and GitHub's "awaiting form submission" stub is always isError=true. Make
+  // write tools (create_pull_request, update_pull_request, issue_write) run
+  // directly instead of deferring to a form that never shows.
+  fwdHeaders.set('x-mcp-features', 'mcp_apps_disable_form_deferral');
   for (const h of ['accept', 'content-type', 'mcp-protocol-version', 'mcp-session-id']) {
     const v = request.headers.get(h);
     if (v) fwdHeaders.set(h, v);
