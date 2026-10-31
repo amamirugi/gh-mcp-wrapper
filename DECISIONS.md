@@ -14,7 +14,7 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 
 ## 기각된 대안
 
-- **코드만으로 시도 횟수 제한**: 상태 저장이 없어서 인스턴스 사이에 카운터를 공유할 수 없다. 필요하면 Vercel Firewall rate limit 규칙으로 처리한다(미적용).
+- **코드만으로 시도 횟수 제한**: 상태 저장이 없어서 인스턴스 사이에 카운터를 공유할 수 없다. Vercel Firewall rate limit 규칙으로 처리한다(아래 실행 상태).
 - **CORS `*` 축소**: 인증이 Bearer 헤더로만 오가고 쿠키를 쓰지 않아서 이번 범위에서 제외했다.
 - **Cloudflare Access Managed OAuth로 이전**: Vercel → Workers 구조 변경이 필요해서 2026-10-31에는 코드 강화를 먼저 택했다.
 
@@ -26,8 +26,9 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 - production(`https://gh-mcp-wrapper.vercel.app`) 실측: AS 메타데이터 200, claude.ai 콜백 인가 화면 200, 비허용 콜백 400, PKCE `plain` 400, 비허용 콜백 등록 400, 토큰 없는 `/mcp` 401, 인가 화면 CSP·`X-Frame-Options` 헤더 확인.
 - claude.ai 커넥터를 다시 연결한 뒤 리포 생성까지 도구 호출이 정상 동작하는 것을 확인했다.
 
+- 2026-10-31 Vercel Firewall 규칙 `authorize POST rate limit`을 대시보드에서 만들었다: 경로가 `/authorize` 또는 `/api/authorize`이고 Method가 `POST`면 IP 기준 60초 고정 창 10회, 초과 시 429. 차단 연장 시간은 두지 않아 창이 바뀌면 풀린다. 브라우저 한 대에서 틀린 비밀번호를 반복 제출해 429 응답을 확인했다. 프로젝트 방화벽 설정이 없던 상태에서는 API(PUT·PATCH)가 404를 내서 대시보드로 처음 만들었고, 그 뒤에도 `GET /v1/security/firewall/config/active`는 404를 돌려준다. 규칙 확인은 대시보드 Firewall → Rules에서 한다.
+- 2026-10-31 이전 PAT 2개는 태현이 GitHub에서 삭제했다.
+
 ## 이어받을 다음 작업
 
-1. Vercel Firewall에 `/authorize`·`/api/authorize` POST rate limit 규칙(IP 기준, 60초 고정 창 10회)을 대시보드에서 만든다. 2026-10-31 API로 시도했지만 프로젝트 방화벽 설정이 아직 없다는 404가 PUT·PATCH 모두에서 나왔다.
-
-- 2026-10-31 이전 PAT 2개는 태현이 GitHub에서 삭제했다.
+- 없음. 연결이 끊기면 claude.ai 커넥터를 다시 연결한다. 비밀번호를 10회 넘게 틀리면 1분 안에 풀린다.
