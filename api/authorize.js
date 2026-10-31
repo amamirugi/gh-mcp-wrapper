@@ -5,13 +5,17 @@ import { isAllowedRedirectUri, safeEqual, tokenVersion } from '../lib/oauth.js';
 const CODE_TTL = 120;
 const FAILURE_DELAY_MS = 1000;
 
-const HTML_HEADERS = {
-  'content-type': 'text/html; charset=utf-8',
-  'cache-control': 'no-store',
-  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
-  'x-frame-options': 'DENY',
-  'referrer-policy': 'no-referrer'
-};
+// form-action also governs where the post-submit redirect may go, so it must
+// include the (already allowlisted) redirect_uri origin, not just 'self'.
+function htmlHeaders(redirectUri) {
+  return {
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'no-store',
+    'content-security-policy': `default-src 'none'; style-src 'unsafe-inline'; form-action 'self' ${new URL(redirectUri).origin}; frame-ancestors 'none'`,
+    'x-frame-options': 'DENY',
+    'referrer-policy': 'no-referrer'
+  };
+}
 
 function validateRequest(params) {
   if (params.get('response_type') !== 'code') return 'unsupported response_type';
@@ -81,7 +85,7 @@ export default async function handler(request) {
   if (request.method === 'GET') {
     const invalid = validateRequest(url.searchParams);
     if (invalid) return badRequest(invalid);
-    return new Response(formHtml(url.searchParams), { headers: HTML_HEADERS });
+    return new Response(formHtml(url.searchParams), { headers: htmlHeaders(url.searchParams.get('redirect_uri')) });
   }
 
   if (request.method === 'POST') {
@@ -97,7 +101,7 @@ export default async function handler(request) {
       params.delete('password');
       return new Response(formHtml(params, 'Wrong password.'), {
         status: 401,
-        headers: HTML_HEADERS
+        headers: htmlHeaders(params.get('redirect_uri'))
       });
     }
 
