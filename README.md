@@ -43,8 +43,10 @@ vercel --prod
 | `GITHUB_PAT` | 1단계에서 발급한 토큰 |
 | `AUTH_PASSWORD` | 커넥터 연결 시 입력할 비밀번호 (직접 정함) |
 | `SIGNING_SECRET` | 긴 랜덤 문자열 (`openssl rand -hex 32`) |
+| `TOKEN_VERSION` | (선택) 기본 `1`. 값을 바꾸면 발급된 토큰이 전부 무효가 되고 커넥터를 다시 연결해야 한다 |
+| `ALLOWED_REDIRECT_URIS` | (선택) 허용할 OAuth 콜백 URI 목록(쉼표 구분). 비우면 claude.ai·claude.com 콜백만 허용한다. `http://localhost` 루프백 콜백은 항상 허용 |
 
-세 개 다 넣고 재배포(`vercel --prod`).
+앞의 세 개는 필수. 넣고 재배포(`vercel --prod`).
 
 ### 동작 확인
 
@@ -85,3 +87,4 @@ JSON에 `authorization_endpoint`, `token_endpoint`, `registration_endpoint`가
 - PAT는 GitHub에서 만료/스코프 조정 가능. 만료되면 Vercel 환경변수만 교체.
 - 단일 사용자 전제. URL이 노출돼도 비밀번호가 게이트지만, `SIGNING_SECRET`과
   `AUTH_PASSWORD`는 충분히 길게.
+- 액세스 토큰은 1시간, 리프레시 토큰은 30일이다. 연결한 지 90일이 지나면 비밀번호를 다시 입력해야 한다.

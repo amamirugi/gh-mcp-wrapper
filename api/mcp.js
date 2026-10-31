@@ -1,6 +1,7 @@
 export const config = { runtime: 'edge' };
 import { verify } from '../lib/token.js';
 import { getBaseUrl, cors } from '../lib/base.js';
+import { tokenVersion } from '../lib/oauth.js';
 
 const GITHUB_MCP = 'https://api.githubcopilot.com/mcp/';
 
@@ -16,7 +17,7 @@ export default async function handler(request) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   const claims = token ? await verify(token, secret) : null;
 
-  if (!claims || claims.typ !== 'access') {
+  if (!claims || claims.typ !== 'access' || claims.kv !== tokenVersion()) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
       headers: {
