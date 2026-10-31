@@ -28,10 +28,9 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 
 - 2026-10-31 Vercel Firewall 규칙 `authorize POST rate limit`을 대시보드에서 만들었다: 경로가 `/authorize` 또는 `/api/authorize`이고 Method가 `POST`면 IP 기준 60초 고정 창 10회, 초과 시 429. 차단 연장 시간은 두지 않아 창이 바뀌면 풀린다. 브라우저 한 대에서 틀린 비밀번호를 반복 제출해 429 응답을 확인했다. 프로젝트 방화벽 설정이 없던 상태에서는 API(PUT·PATCH)가 404를 내서 대시보드로 처음 만들었고, 그 뒤에도 `GET /v1/security/firewall/config/active`는 404를 돌려준다. 규칙 확인은 대시보드 Firewall → Rules에서 한다.
 - 2026-10-31 이전 PAT 2개는 태현이 GitHub에서 삭제했다.
-- 2026-10-31 배포 보호·env 범위 점검: 배포 보호는 Vercel Authentication `all_except_custom_domains`다. production `gh-mcp-wrapper.vercel.app`은 공개(200)고 preview와 `git-main` 별칭은 Vercel SSO로 302다. 태현 승인으로 `GITHUB_PAT`·`AUTH_PASSWORD`·`SIGNING_SECRET`(sensitive)의 범위를 production+preview에서 **production 전용**으로 좁혔다(`GITHUB_TOOLSETS`는 원래 production 전용). 브랜치 push로 생기는 preview 배포에 PAT가 실리지 않게 하기 위해서다. 재조회로 범위를 확인했고 production 응답(AS 메타데이터 200, 토큰 없는 `/mcp` 401)은 그대로다. sensitive 값은 API로 읽을 수 없어 값 보존은 다음 production 배포에서 확인된다.
+- 2026-10-31 배포 보호·env 범위 점검: 배포 보호는 Vercel Authentication `all_except_custom_domains`다. production `gh-mcp-wrapper.vercel.app`은 공개(200)고 preview와 `git-main` 별칭은 Vercel SSO로 302다. 태현 승인으로 `GITHUB_PAT`·`AUTH_PASSWORD`·`SIGNING_SECRET`(sensitive)의 범위를 production+preview에서 **production 전용**으로 좁혔다(`GITHUB_TOOLSETS`는 원래 production 전용). 브랜치 push로 생기는 preview 배포에 PAT가 실리지 않게 하기 위해서다. 재조회로 범위를 확인했고 production 응답(AS 메타데이터 200, 토큰 없는 `/mcp` 401)은 그대로다. sensitive 값은 API로 읽을 수 없어 값 보존은 다음 production 배포에서 확인하기로 했다. #7 머지로 production이 다시 배포된 뒤 태현이 claude.ai 커넥터 도구 호출이 정상임을 확인했다.
 
 ## 이어받을 다음 작업
 
-- 다음 production 배포 뒤 커넥터 도구 호출이 정상인지 확인한다. 인증이 깨지면 2026-10-31 env 범위 변경을 먼저 의심하고 세 값을 다시 넣는다.
 - preview 배포에는 비밀값이 없어 인증 흐름이 동작하지 않는다. preview에서 검증해야 하면 그때만 범위를 넓힌다.
 - 그 밖에는 없음. 연결이 끊기면 claude.ai 커넥터를 다시 연결한다. 비밀번호를 10회 넘게 틀리면 1분 안에 풀린다.
