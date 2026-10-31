@@ -28,5 +28,6 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 
 ## 이어받을 다음 작업
 
-1. 이전 PAT 2개(classic 1개, 사용 이력 없는 fine-grained 1개)를 GitHub에서 삭제한다. 태현이 직접 한다.
-2. (후보) Vercel Firewall에 `/authorize` POST rate limit 규칙 추가.
+1. Vercel Firewall에 `/authorize`·`/api/authorize` POST rate limit 규칙(IP 기준, 60초 고정 창 10회)을 대시보드에서 만든다. 2026-10-31 API로 시도했지만 프로젝트 방화벽 설정이 아직 없다는 404가 PUT·PATCH 모두에서 나왔다.
+
+- 2026-10-31 이전 PAT 2개는 태현이 GitHub에서 삭제했다.
