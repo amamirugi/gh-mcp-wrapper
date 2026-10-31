@@ -1,5 +1,32 @@
 export const config = { runtime: 'edge' };
 import { sign } from '../lib/token.js';
+import { isAllowedRedirectUri, safeEqual, tokenVersion } from '../lib/oauth.js';
+
+const CODE_TTL = 120;
+const FAILURE_DELAY_MS = 1000;
+
+const HTML_HEADERS = {
+  'content-type': 'text/html; charset=utf-8',
+  'cache-control': 'no-store',
+  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'no-referrer'
+};
+
+function validateRequest(params) {
+  if (params.get('response_type') !== 'code') return 'unsupported response_type';
+  if (!isAllowedRedirectUri(params.get('redirect_uri'))) return 'redirect_uri not allowed';
+  if (!params.get('code_challenge')) return 'code_challenge required';
+  if (params.get('code_challenge_method') !== 'S256') return 'code_challenge_method must be S256';
+  return null;
+}
+
+function badRequest(message) {
+  return new Response(message, {
+    status: 400,
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
+  });
+}
 
 function esc(s) {
   return String(s || '').replace(/[&<>"']/g, (c) =>
@@ -52,9 +79,9 @@ export default async function handler(request) {
   const url = new URL(request.url);
 
   if (request.method === 'GET') {
-    return new Response(formHtml(url.searchParams), {
-      headers: { 'content-type': 'text/html; charset=utf-8' }
-    });
+    const invalid = validateRequest(url.searchParams);
+    if (invalid) return badRequest(invalid);
+    return new Response(formHtml(url.searchParams), { headers: HTML_HEADERS });
   }
 
   if (request.method === 'POST') {
@@ -62,25 +89,30 @@ export default async function handler(request) {
     const params = new URLSearchParams();
     for (const [k, v] of form.entries()) params.set(k, v);
 
-    if (form.get('password') !== process.env.AUTH_PASSWORD) {
+    const invalid = validateRequest(params);
+    if (invalid) return badRequest(invalid);
+
+    if (!(await safeEqual(form.get('password'), process.env.AUTH_PASSWORD))) {
+      await new Promise((resolve) => setTimeout(resolve, FAILURE_DELAY_MS));
+      params.delete('password');
       return new Response(formHtml(params, 'Wrong password.'), {
         status: 401,
-        headers: { 'content-type': 'text/html; charset=utf-8' }
+        headers: HTML_HEADERS
       });
     }
 
     const redirectUri = form.get('redirect_uri');
-    if (!redirectUri) return new Response('missing redirect_uri', { status: 400 });
-
     const code = await sign(
       {
         typ: 'code',
-        cc: form.get('code_challenge') || '',
+        kv: tokenVersion(),
+        cc: form.get('code_challenge'),
         ru: redirectUri,
+        cid: form.get('client_id') || '',
         scope: form.get('scope') || 'mcp'
       },
       process.env.SIGNING_SECRET,
-      600
+      CODE_TTL
     );
 
     const dest = new URL(redirectUri);
