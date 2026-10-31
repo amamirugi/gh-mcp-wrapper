@@ -20,13 +20,13 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 
 ## 실행 상태
 
-- 2026-10-31 브랜치 `claude/epic-keller-12iu3x`(`1691c64`)에 위 변경을 커밋했다. 수정 파일은 `lib/oauth.js`(신규), `api/authorize.js`, `api/token.js`, `api/register.js`, `api/mcp.js`, `README.md`다.
+- 2026-10-31 위 변경을 #1로 squash 머지했다(`b3f30e9`). 수정 파일은 `lib/oauth.js`(신규), `api/authorize.js`, `api/token.js`, `api/register.js`, `api/mcp.js`, `README.md`다.
 - 로컬 Node 22로 핸들러를 직접 호출하는 시나리오 27건이 모두 통과했다: 허용·비허용 콜백, PKCE 누락·plain·불일치, client_id 불일치, 구형 토큰 거부, 90일 초과 리프레시 거부, 버전 변경 시 폐기, register 검증, env 교체. 테스트 스크립트는 리포에 넣지 않았다.
-- Vercel preview 배포가 생성됐다. **production은 main `f4b4781` 그대로이고, main에 머지해야 반영된다.**
-- 머지하면 기존 토큰(`kv` 클레임 없음)이 전부 무효가 된다. claude.ai 커넥터를 한 번 다시 연결해야 한다.
+- 머지 전에 Vercel의 `GITHUB_PAT`(fine-grained, 만료 2027-10-31), `AUTH_PASSWORD`, `SIGNING_SECRET`을 모두 새 값으로 바꿨다. 머지로 생성된 production 배포가 새 값을 쓴다.
+- production(`https://gh-mcp-wrapper.vercel.app`) 실측: AS 메타데이터 200, claude.ai 콜백 인가 화면 200, 비허용 콜백 400, PKCE `plain` 400, 비허용 콜백 등록 400, 토큰 없는 `/mcp` 401, 인가 화면 CSP·`X-Frame-Options` 헤더 확인.
+- claude.ai 커넥터를 다시 연결한 뒤 리포 생성까지 도구 호출이 정상 동작하는 것을 확인했다.
 
 ## 이어받을 다음 작업
 
-1. 태현이 main에 머지한 뒤 claude.ai 커넥터를 다시 연결하고, 도구 호출이 되는지 확인한다.
-2. (후보) 머지와 함께 `AUTH_PASSWORD`·`SIGNING_SECRET` 교체, GitHub PAT를 fine-grained 최소 권한으로 축소. 모두 태현이 직접 한다.
-3. (후보) Vercel Firewall에 `/authorize` POST rate limit 규칙 추가.
+1. 이전 PAT 2개(classic 1개, 사용 이력 없는 fine-grained 1개)를 GitHub에서 삭제한다. 태현이 직접 한다.
+2. (후보) Vercel Firewall에 `/authorize` POST rate limit 규칙 추가.
