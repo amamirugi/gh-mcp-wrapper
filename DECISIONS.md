@@ -10,7 +10,7 @@ claude.ai 커스텀 커넥터용 GitHub MCP OAuth 래퍼(Vercel Edge). 프로젝
 - **토큰 수명**: code 120초, 액세스 1시간, 리프레시 30일(갱신할 때마다 연장), 최초 인가 후 최대 90일. 90일이 지나면 비밀번호를 다시 입력해야 한다.
 - **`TOKEN_VERSION` env(기본 `1`)로 일괄 폐기한다.** 모든 토큰에 `kv` 클레임이 들어가고, 값이 다르면 거부한다. `SIGNING_SECRET`을 바꾸지 않아도 폐기할 수 있다.
 - 비밀번호는 SHA-256 다이제스트를 상수 시간으로 비교하고, 실패하면 1초 지연한 뒤 응답한다.
-- 인가 화면에 `frame-ancestors 'none'` CSP, `X-Frame-Options: DENY`, `no-store`, `no-referrer`를 붙인다.
+- 인가 화면에 `frame-ancestors 'none'` CSP, `X-Frame-Options: DENY`, `no-store`, `no-referrer`를 붙인다. CSP `form-action`은 `'self'`와 검증을 통과한 `redirect_uri`의 출처를 함께 허용한다. 브라우저는 폼 제출 뒤 리다이렉트 대상에도 `form-action`을 적용하므로, `'self'`만 두면 비밀번호가 맞아도 콜백으로 넘어가지 못한다(2026-10-31 Chrome·Brave에서 발생, 같은 날 수정).
 
 ## 기각된 대안
 
